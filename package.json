@@ -1,0 +1,24 @@
+{
+  "name": "flux-air-cheap",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/aprtm/fluxAirCheapExample.git",
+  "author": "aprtm <apacheco@tekmexico.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "webpack"
+  },
+  "dependencies": {
+    "flux": "^3.1.3",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/flux": "^3.1.3",
+    "@types/react": "^16.0.13",
+    "@types/react-dom": "^16.0.1",
+    "ts-loader": "^3.0.3",
+    "typescript": "^2.5.3",
+    "webpack": "^3.8.1"
+  }
+}
