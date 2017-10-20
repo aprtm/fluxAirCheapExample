@@ -3,27 +3,46 @@ import { render } from 'react-dom';
 import { Container } from 'flux/utils';
 import * as Autosuggest from 'react-autosuggest';
 import AirportStore from './stores/airportStore';
+import RouteStore from './stores/RouteStore';
+import TicketStore from './stores/TicketStore';
+import TicketItem from './components/TicketItem';
 import AirportActionCreators from './actions/AirportActionCreators';
 
 class App extends React.Component<{},__Type.AppState>{
     // See comment at the bottom
     static getStores(){
-        return ([AirportStore]);
+        return ([AirportStore, RouteStore, TicketStore]);
     }
 
     static calculateState( ){
         return {
-            airports: AirportStore.getState()
+            airports: AirportStore.getState(),
+            origin: RouteStore.get('origin'),
+            destination: RouteStore.get('destination'),
+            tickets: TicketStore.getState()
+
         }
     }
 
     constructor(){
         super();
         this.state = {
+            tickets: [],
+            origin: '',
+            destination: '',
             valueFrom: '',
             valueTo: '',
             airports: [],
             suggestions: []
+        }
+    }
+
+    componentWillUpdate( _nextProps:__Type.AppProps, nextState:__Type.AppState ){
+        let originAndDestinationSelected = nextState.origin && nextState.destination;
+        let selectionHasChangedSinceLastUpdate = nextState.origin !== this.state.origin || nextState.destination !== this.state.destination;
+
+        if( originAndDestinationSelected && selectionHasChangedSinceLastUpdate ){
+            AirportActionCreators.fetchTickets();
         }
     }
 
@@ -47,6 +66,14 @@ class App extends React.Component<{},__Type.AppState>{
             callback && callback(null, suggestions);
 
             return suggestions;
+    }
+
+    handleSelect = (target:string, suggestion:string) => {
+        const airportCodeRegex = /\(([^)]+)\)/;
+        let airportCodeSuggestions = airportCodeRegex.exec(suggestion);
+        let airportCode = airportCodeSuggestions ? airportCodeSuggestions.toString() : '';
+
+        AirportActionCreators.chooseAirport(target, airportCode);
     }
 
     onSuggestionsFetchRequested = ( req:any ) => {
@@ -83,6 +110,9 @@ class App extends React.Component<{},__Type.AppState>{
     }
 
     render(){
+        let ticketList = this.state.tickets.map((ticket)=>{
+            <TicketItem key={ticket.id} ticket={ticket}/>
+        });
         const { valueFrom, valueTo, suggestions } = this.state;
         return (
             <div>
@@ -95,6 +125,7 @@ class App extends React.Component<{},__Type.AppState>{
                         <Autosuggest
                             id='origin'
                             suggestions={suggestions || []}
+                            onSuggestionSelected={(_e, {suggestion})=>this.handleSelect('origin',suggestion)}
                             onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
                             onSuggestionsClearRequested={this.onSuggestionsClearRequested}
                             getSuggestionValue={this.getSuggestionValue}
@@ -110,6 +141,7 @@ class App extends React.Component<{},__Type.AppState>{
                         <Autosuggest
                             id='destination'
                             suggestions={suggestions || []}
+                            onSuggestionSelected={(_e, {suggestion})=>this.handleSelect('destination',suggestion)}
                             onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
                             onSuggestionsClearRequested={this.onSuggestionsClearRequested}
                             getSuggestionValue={this.getSuggestionValue}
@@ -124,6 +156,9 @@ class App extends React.Component<{},__Type.AppState>{
                         />
                     </div>
                 </header>
+                <div>
+                    {ticketList}
+                </div>
             </div>
         );
     }
